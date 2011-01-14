@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process
+    name="bookstore-businessprocess"
+    targetNamespace="http://enterprise.netbeans.org/bpel/bookstore-businessprocess/bookstore-businessprocess"
+    xmlns:tns="http://enterprise.netbeans.org/bpel/bookstore-businessprocess/bookstore-businessprocess"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+    xmlns:sxt="http://www.sun.com/wsbpel/2.0/process/executable/SUNExtension/Trace" 
+    xmlns:sxed="http://www.sun.com/wsbpel/2.0/process/executable/SUNExtension/Editor"
+    xmlns:sxeh="http://www.sun.com/wsbpel/2.0/process/executable/SUNExtension/ErrorHandling" xmlns:sxed2="http://www.sun.com/wsbpel/2.0/process/executable/SUNExtension/Editor2" xmlns:ns0="http://infosys.tuwien.ac.at/aic10/ass2/OrderProcessSchema" xmlns:ns1="http://infosys.tuwien.ac.at/aic10/ass1/dto/warehouse">
+    <import namespace="http://infosys.tuwien.ac.at/aic10/ass2/process" location="file:/C:/Dev/Src/Workspaces/NetBeans/bookstore-businessprocess/OrderProcess.wsdl" importType="http://schemas.xmlsoap.org/wsdl/"/>
+    <import namespace="http://enterprise.netbeans.org/bpel/customer_management_wrapper" location="customer_management_wrapper.wsdl" importType="http://schemas.xmlsoap.org/wsdl/"/>
+    <import namespace="http://infosys.tuwien.ac.at/aic10/ass1/dto/customermanagement" location="customer_management.wsdl" importType="http://schemas.xmlsoap.org/wsdl/"/>
+    <import namespace="http://enterprise.netbeans.org/bpel/warehouse_wrapper" location="warehouse_wrapper.wsdl" importType="http://schemas.xmlsoap.org/wsdl/"/>
+    <import namespace="http://infosys.tuwien.ac.at/aic10/ass1/dto/warehouse" location="warehouse.wsdl" importType="http://schemas.xmlsoap.org/wsdl/"/>
+    <partnerLinks>
+        <partnerLink name="customer_management" xmlns:tns="http://enterprise.netbeans.org/bpel/customer_management_wrapper" partnerLinkType="tns:customer_management_link_type" partnerRole="customer_management_role"/>
+        <partnerLink name="warehouse_partner_link" xmlns:tns="http://enterprise.netbeans.org/bpel/warehouse_wrapper" partnerLinkType="tns:warehouse_link_type" partnerRole="warehouse_role"/>
+        <partnerLink name="order_process_client" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass2/process" partnerLinkType="tns:OrderProcessLinkType" myRole="OrderProcessProvider"/>
+    </partnerLinks>
+    <variables>
+        <variable name="order_from_warehouse_output_variable" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/warehouse" messageType="tns:orderResponse"/>
+        <variable name="order_from_warehouse_input_variable" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/warehouse" messageType="tns:order"/>
+        <variable name="check_availability_output_variable" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/warehouse" messageType="tns:check_availabilityResponse"/>
+        <variable name="check_availability_input_variable" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/warehouse" messageType="tns:check_availability"/>
+        <variable name="get_customer_output_variable" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/customermanagement" messageType="tns:get_customerResponse"/>
+        <variable name="get_customer_input_variable" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/customermanagement" messageType="tns:get_customer"/>
+        <variable name="start_process_output_variable" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass2/process" messageType="tns:start_process_response"/>
+        <variable name="start_process_input_variable" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass2/process" messageType="tns:start_process_request"/>
+    </variables>
+    <sequence>
+        <receive name="new_order_receipt" createInstance="yes" partnerLink="order_process_client" operation="start_process" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass2/process" portType="tns:OrderProcessPortType" variable="start_process_input_variable"/>
+        <assign name="assignment_of_new_order_request">
+            <copy>
+                <from>$start_process_input_variable.part1/ns0:customer</from>
+                <to>$get_customer_input_variable.parameters/id</to>
+            </copy>
+        </assign>
+        <invoke name="invoke_get_customer" partnerLink="customer_management" operation="get_customer" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/customermanagement" portType="tns:CustomerManagement" inputVariable="get_customer_input_variable" outputVariable="get_customer_output_variable"/>
+        <assign name="assignment_of_get_customer_invokation">
+            <copy>
+                <from>$start_process_input_variable.part1/ns0:orderParts/ns0:product_id</from>
+                <to>$check_availability_input_variable.parameters/product/@id</to>
+            </copy>
+        </assign>
+        <forEach name="iterate_over_all_products" parallel="no" counterName="ForEach1Counter">
+            <startCounterValue>number(1)</startCounterValue>
+            <finalCounterValue>$start_process_input_variable.part1/ns0:orderParts/ns0:amount</finalCounterValue>
+            <scope name="product_iteration">
+                <sequence name="sequence_within_product_iteration">
+                    <invoke name="invoke_check_availability_in_warehouse" partnerLink="warehouse_partner_link" operation="check_availability" portType="ns1:Warehouse" inputVariable="check_availability_input_variable" outputVariable="check_availability_output_variable"/>
+                    <if name="If1">
+                        <condition>$check_availability_output_variable.parameters/return/isAvailable</condition>
+                            <sequence name="sequence_within_warehouse_order">
+                                <assign name="assignment_of_availability_check">
+                                        <copy>
+                                                <from>$start_process_input_variable.part1/ns0:orderParts/ns0:product_id</from>
+                                                    <to>$order_from_warehouse_input_variable.parameters/product/@id</to>
+                                            </copy>
+                                            <copy>
+                                                <from>$start_process_input_variable.part1/ns0:orderParts/ns0:amount</from>
+                                                    <to>$order_from_warehouse_input_variable.parameters/amount</to>
+                                            </copy>
+                                    </assign>
+                                    <invoke name="invoke_warehouse_order" partnerLink="warehouse_partner_link" operation="order" inputVariable="order_from_warehouse_input_variable" outputVariable="order_from_warehouse_output_variable"/>
+                                    <assign name="assignment_of_warehouse_order">
+                                        <copy>
+                                                <from>$order_from_warehouse_output_variable.parameters/return &gt; number(0)</from>
+                                                    <to>$start_process_output_variable.part1/ns0:orderResult/ns0:success</to>
+                                            </copy>
+                                            <copy>
+                                                <from>$get_customer_output_variable.parameters/return/name</from>
+                                                    <to>$start_process_output_variable.part1/ns0:orderResult/ns0:comment</to>
+                                            </copy>
+                                    </assign>
+                            </sequence>
+                    </if>
+                </sequence>
+            </scope>
+        </forEach>
+        <reply name="order_process_final_reply" partnerLink="order_process_client" operation="start_process" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass2/process" portType="tns:OrderProcessPortType" variable="start_process_output_variable"/>
+    </sequence>
+</process>
+
+
+
+
+
+
+
+
+
+
+
