@@ -108,12 +108,16 @@
                                 <invoke name="invoke_order_from_austria_supplier" partnerLink="austria_supplier" operation="order" portType="ns2:Supplier" inputVariable="order_from_austria_supplier_input_variable" outputVariable="order_from_austria_supplier_output_variable"/>
                                 <assign name="assignment_of_order_from_austria_supplier">
                                     <copy>
-                                            <from>$order_from_austria_supplier_output_variable.parameters/return &gt; 0</from>
-                                                <to>$start_process_output_variable.part1/ns0:orderResult/ns0:success</to>
-                                        </copy>
+                                        <from>$get_customer_output_variable.parameters/return/shippingAddress</from>
+                                        <to>$shipping_service_input_variable.parameters/customer_shipping_address</to>
+                                    </copy>
                                     <copy>
-                                        <from>$get_customer_output_variable.parameters/return/name</from>
-                                        <to>$start_process_output_variable.part1/ns0:orderResult/ns0:comment</to>
+                                        <from>$start_process_input_variable.part1/ns0:orderParts/ns0:product_id</from>
+                                        <to>$shipping_service_input_variable.parameters/items/product/@id</to>
+                                    </copy>
+                                    <copy>
+                                        <from>$start_process_input_variable.part1/ns0:orderParts/ns0:amount</from>
+                                        <to>$shipping_service_input_variable.parameters/items/quantity</to>
                                     </copy>
                                 </assign>
                             </sequence>
@@ -134,6 +138,7 @@
         <reply name="order_process_final_reply" partnerLink="order_process_client" operation="start_process" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass2/process" portType="tns:OrderProcessPortType" variable="start_process_output_variable"/>
     </sequence>
 </process>
+
 
 
 
