@@ -26,6 +26,10 @@
         <partnerLink name="order_process_client" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass2/process" partnerLinkType="tns:OrderProcessLinkType" myRole="OrderProcessProvider"/>
     </partnerLinks>
     <variables>
+        <variable name="update_customer_account_output_variable" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/customermanagement" messageType="tns:update_accountResponse"/>
+        <variable name="update_customer_account_input_variable" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/customermanagement" messageType="tns:update_account"/>
+        <variable name="notify_customer_output_variable" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/customermanagement" messageType="tns:notify_customerResponse"/>
+        <variable name="notify_customer_input_variable" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/customermanagement" messageType="tns:notify_customer"/>
         <variable name="get_customer_output_variable" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/customermanagement" messageType="tns:get_customerResponse"/>
         <variable name="get_customer_input_variable" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/customermanagement" messageType="tns:get_customer"/>
         <variable name="shipping_service_output_variable" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/shipping" messageType="tns:ship_itemsResponse"/>
@@ -91,6 +95,22 @@
                                             <from>$get_customer_output_variable.parameters/return/shippingAddress</from>
                                             <to>$shipping_service_input_variable.parameters/customer_shipping_address</to>
                                         </copy>
+                                        <copy>
+                                            <from>$get_customer_output_variable.parameters/return/@id</from>
+                                            <to>$notify_customer_input_variable.parameters/id</to>
+                                        </copy>
+                                        <copy>
+                                            <from>"Successfully shipped all items to address: ' '"</from>
+                                            <to>$notify_customer_input_variable.parameters/message/message</to>
+                                        </copy>
+                                        <copy>
+                                            <from>$get_customer_output_variable.parameters/return/openBalance - $order_from_warehouse_output_variable.parameters/return * $start_process_input_variable.part1/ns0:orderParts/ns0:amount</from>
+                                            <to>$update_customer_account_input_variable.parameters/balance</to>
+                                        </copy>
+                                        <copy>
+                                            <from>$get_customer_output_variable.parameters/return/@id</from>
+                                            <to>$update_customer_account_input_variable.parameters/id</to>
+                                        </copy>
                                     </assign>
                             </sequence>
                         <else>
@@ -119,6 +139,22 @@
                                         <from>$start_process_input_variable.part1/ns0:orderParts/ns0:amount</from>
                                         <to>$shipping_service_input_variable.parameters/items/quantity</to>
                                     </copy>
+                                    <copy>
+                                        <from>$get_customer_output_variable.parameters/return/@id</from>
+                                        <to>$notify_customer_input_variable.parameters/id</to>
+                                    </copy>
+                                    <copy>
+                                        <from>"Successfully shipped all items to address: ' '"</from>
+                                        <to>$notify_customer_input_variable.parameters/message/message</to>
+                                    </copy>
+                                    <copy>
+                                        <from>$get_customer_output_variable.parameters/return/@id</from>
+                                        <to>$update_customer_account_input_variable.parameters/id</to>
+                                    </copy>
+                                    <copy>
+                                        <from>$get_customer_output_variable.parameters/return/openBalance - $order_from_austria_supplier_output_variable.parameters/return * $start_process_input_variable.part1/ns0:orderParts/ns0:amount</from>
+                                        <to>$update_customer_account_input_variable.parameters/balance</to>
+                                    </copy>
                                 </assign>
                             </sequence>
                         </else>
@@ -128,6 +164,8 @@
         </forEach>
         <flow name="final_order_process_flow">
             <invoke name="invoke_ship_items" partnerLink="shipping_service" operation="ship_items" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/shipping" portType="tns:ShippingService" inputVariable="shipping_service_input_variable" outputVariable="shipping_service_output_variable"/>
+            <invoke name="notify_customer_invokation" partnerLink="customer_management" operation="notify_customer" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/customermanagement" portType="tns:CustomerManagement" inputVariable="notify_customer_input_variable" outputVariable="notify_customer_output_variable"/>
+            <invoke name="update_customer_account" partnerLink="customer_management" operation="update_account" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass1/dto/customermanagement" portType="tns:CustomerManagement" inputVariable="update_customer_account_input_variable" outputVariable="update_customer_account_output_variable"/>
         </flow>
         <assign name="assignment_from_final_order_process">
             <copy>
@@ -138,6 +176,7 @@
         <reply name="order_process_final_reply" partnerLink="order_process_client" operation="start_process" xmlns:tns="http://infosys.tuwien.ac.at/aic10/ass2/process" portType="tns:OrderProcessPortType" variable="start_process_output_variable"/>
     </sequence>
 </process>
+
 
 
 
