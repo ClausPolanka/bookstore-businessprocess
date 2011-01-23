@@ -70,49 +70,49 @@
                     <invoke name="invoke_check_availability_in_warehouse" partnerLink="warehouse_partner_link" operation="check_availability" portType="ns1:Warehouse" inputVariable="check_availability_input_variable" outputVariable="check_availability_output_variable"/>
                     <if name="if_product_available_in_warehouse">
                         <condition>$check_availability_output_variable.parameters/return/isAvailable</condition>
-                            <sequence name="sequence_within_warehouse_order">
-                                <assign name="assignment_of_availability_check">
-                                        <copy>
-                                                <from>$start_process_input_variable.part1/ns0:orderParts/ns0:product_id</from>
-                                                    <to>$order_from_warehouse_input_variable.parameters/product/@id</to>
-                                            </copy>
-                                            <copy>
-                                                <from>$start_process_input_variable.part1/ns0:orderParts/ns0:amount</from>
-                                                    <to>$order_from_warehouse_input_variable.parameters/amount</to>
-                                            </copy>
-                                    </assign>
-                                    <invoke name="invoke_warehouse_order" partnerLink="warehouse_partner_link" operation="order" inputVariable="order_from_warehouse_input_variable" outputVariable="order_from_warehouse_output_variable"/>
-                                    <assign name="assignment_of_warehouse_order">
-                                        <copy>
-                                            <from>$start_process_input_variable.part1/ns0:orderParts/ns0:product_id</from>
-                                            <to>$shipping_service_input_variable.parameters/items/product/@id</to>
-                                        </copy>
-                                        <copy>
-                                            <from>$start_process_input_variable.part1/ns0:orderParts/ns0:amount</from>
-                                            <to>$shipping_service_input_variable.parameters/items/quantity</to>
-                                        </copy>
-                                        <copy>
-                                            <from>$get_customer_output_variable.parameters/return/shippingAddress</from>
-                                            <to>$shipping_service_input_variable.parameters/customer_shipping_address</to>
-                                        </copy>
-                                        <copy>
-                                            <from>$get_customer_output_variable.parameters/return/@id</from>
-                                            <to>$notify_customer_input_variable.parameters/id</to>
-                                        </copy>
-                                        <copy>
-                                            <from>"Successfully shipped all items to address: ' '"</from>
-                                            <to>$notify_customer_input_variable.parameters/message/message</to>
-                                        </copy>
-                                        <copy>
-                                            <from>$get_customer_output_variable.parameters/return/openBalance - $order_from_warehouse_output_variable.parameters/return * $start_process_input_variable.part1/ns0:orderParts/ns0:amount</from>
-                                            <to>$update_customer_account_input_variable.parameters/balance</to>
-                                        </copy>
-                                        <copy>
-                                            <from>$get_customer_output_variable.parameters/return/@id</from>
-                                            <to>$update_customer_account_input_variable.parameters/id</to>
-                                        </copy>
-                                    </assign>
-                            </sequence>
+                        <sequence name="sequence_within_warehouse_order">
+                            <assign name="assignment_of_availability_check">
+                                <copy>
+                                    <from>$start_process_input_variable.part1/ns0:orderParts/ns0:product_id</from>
+                                    <to>$order_from_warehouse_input_variable.parameters/product/@id</to>
+                                </copy>
+                                <copy>
+                                    <from>$start_process_input_variable.part1/ns0:orderParts/ns0:amount</from>
+                                    <to>$order_from_warehouse_input_variable.parameters/amount</to>
+                                </copy>
+                            </assign>
+                            <invoke name="invoke_warehouse_order" partnerLink="warehouse_partner_link" operation="order" inputVariable="order_from_warehouse_input_variable" outputVariable="order_from_warehouse_output_variable"/>
+                            <assign name="assignment_of_warehouse_order">
+                                <copy>
+                                    <from>$start_process_input_variable.part1/ns0:orderParts/ns0:product_id</from>
+                                    <to>$shipping_service_input_variable.parameters/items/product/@id</to>
+                                </copy>
+                                <copy>
+                                    <from>$start_process_input_variable.part1/ns0:orderParts/ns0:amount</from>
+                                    <to>$shipping_service_input_variable.parameters/items/quantity</to>
+                                </copy>
+                                <copy>
+                                    <from>$get_customer_output_variable.parameters/return/shippingAddress</from>
+                                    <to>$shipping_service_input_variable.parameters/customer_shipping_address</to>
+                                </copy>
+                                <copy>
+                                    <from>$get_customer_output_variable.parameters/return/@id</from>
+                                    <to>$notify_customer_input_variable.parameters/id</to>
+                                </copy>
+                                <copy>
+                                    <from>"Successfully shipped all items to address: ' '"</from>
+                                    <to>$notify_customer_input_variable.parameters/message/message</to>
+                                </copy>
+                                <copy>
+                                    <from>$get_customer_output_variable.parameters/return/openBalance - $order_from_warehouse_output_variable.parameters/return * $start_process_input_variable.part1/ns0:orderParts/ns0:amount</from>
+                                    <to>$update_customer_account_input_variable.parameters/balance</to>
+                                </copy>
+                                <copy>
+                                    <from>$get_customer_output_variable.parameters/return/@id</from>
+                                    <to>$update_customer_account_input_variable.parameters/id</to>
+                                </copy>
+                            </assign>
+                        </sequence>
                         <else>
                             <sequence name="sequence_within_order_from_austria_supplier">
                                 <assign name="assignment_for_ordering_from_austria_supplier">
